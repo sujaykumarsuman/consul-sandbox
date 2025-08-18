@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154
 set -e
 
 sudo apt-get update
@@ -15,6 +16,6 @@ for i in {1..60}; do
   sleep 5
 done
 
-sudo bash /ops/shared/scripts/install_consul_server.sh "${datacenter}"
-
+sudo bash /ops/shared/scripts/install_consul_server.sh "${consul_ent_license}" "${datacenter}"
+# shellcheck disable=SC1091
 source /home/ubuntu/.bashrc

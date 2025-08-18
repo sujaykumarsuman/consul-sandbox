@@ -124,7 +124,7 @@ locals {
 
   consul_container = {
     name      = "consul-client"
-    image     = "hashicorp/consul:1.18.0"
+    image     = "hashicorp/consul-enterprise:1.18.7"
     essential = true
     command = [
       "agent",
@@ -134,7 +134,8 @@ locals {
     ]
     environment = [
       { name = "CONSUL_HTTP_TOKEN", value = var.consul_http_token },
-      { name = "CONSUL_HTTP_ADDR", value = var.consul_http_addr }
+      { name = "CONSUL_HTTP_ADDR", value = var.consul_http_addr },
+      { name = "CONSUL_LICENSE", value = var.consul_ent_license }
     ]
     portMappings = [
       { containerPort = 8500, hostPort = 8500, protocol = "tcp" },
