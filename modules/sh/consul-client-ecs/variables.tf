@@ -21,3 +21,4 @@ variable "task_memory" {
   type    = number
   default = 512
 }
+variable "consul_ent_license" {}

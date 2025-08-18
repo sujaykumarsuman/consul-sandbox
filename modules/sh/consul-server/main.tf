@@ -118,7 +118,8 @@ resource "aws_instance" "server" {
   associate_public_ip_address = true
 
   user_data = templatefile("${path.module}/../../../shared/data-scripts/sh/user-data-server.sh", {
-    datacenter = var.datacenter
+    datacenter         = var.datacenter,
+    consul_ent_license = var.consul_ent_license
   })
 
   connection {

@@ -3,20 +3,35 @@
 set -e
 
 CONSUL_VERSION=1.18.7
-DATACENTER=$1
+CONSUL_ENT_LICENSE=$1
+if [ -z "$CONSUL_ENT_LICENSE" ]; then
+  echo "Usage: $0 <consul_ent_license> <datacenter>"
+  exit 1
+fi
+DATACENTER=$2
 if [ -z "$DATACENTER" ]; then
-  echo "Usage: $0 <datacenter>"
+  echo "Usage: $0 <consul_ent_license> <datacenter>"
   exit 1
 fi
 
 sudo apt-get update
-sudo apt-get install -y unzip curl
+sudo apt-get install -y software-properties-common
+sudo add-apt-repository -y universe && sudo apt-get -y update
+sudo apt-get install -y unzip jq curl
 
-curl -L -o /tmp/consul.zip https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip
-sudo unzip /tmp/consul.zip -d /usr/local/bin
-sudo chmod +x /usr/local/bin/consul
+# Install HashiCorp Apt Repository and Consul Enterprise
+wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+echo "Installing Consul Enterprise"
+sudo apt-get update && sudo apt-get -y install consul-enterprise=$CONSUL_VERSION*
 
-sudo mkdir -p /etc/consul.d
+# Install Consul Enterprise license
+echo "Installing Consul Enterprise license"
+echo "$CONSUL_ENT_LICENSE" | sudo tee /etc/consul.d/license.hclic > /dev/null
+sudo chmod 644 /etc/consul.d/license.hclic
+
+# Create server configuration
+sudo mkdir -p /etc/consul.d /opt/consul/data
 cat <<CFG | sudo tee /etc/consul.d/server.hcl
 server = true
 bootstrap_expect = 1
@@ -24,6 +39,7 @@ datacenter = "${DATACENTER}"
 ui = true
 client_addr = "0.0.0.0"
 bind_addr = "0.0.0.0"
+data_dir = "/opt/consul/data"
 CFG
 
 cat <<'SERVICE' | sudo tee /etc/systemd/system/consul.service
@@ -33,12 +49,12 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d
+ExecStart=/usr/bin/consul agent -config-dir=/etc/consul.d
 Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
 SERVICE
 
-sudo systemctl enable consul
-sudo systemctl start consul
+sudo systemctl enable consul.service && sleep 5
+sudo systemctl start consul.service
