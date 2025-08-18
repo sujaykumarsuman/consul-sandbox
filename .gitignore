@@ -5,3 +5,6 @@
 *.tfvars
 *tfplan
 .terraform.lock.hcl
+
+# local .env files
+.env
