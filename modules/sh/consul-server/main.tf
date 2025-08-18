@@ -4,6 +4,14 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.0"
     }
+    local = {
+      source  = "hashicorp/local"
+      version = "~> 2.4"
+    }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.2"
+    }
   }
 }
 
@@ -26,6 +34,21 @@ resource "tls_private_key" "ssh_key" {
 resource "aws_key_pair" "server" {
   key_name   = "sh-consul-server-key"
   public_key = tls_private_key.ssh_key.public_key_openssh
+}
+
+# Create directory for SSH keys
+resource "null_resource" "create_ssh_dir" {
+  provisioner "local-exec" {
+    command = "mkdir -p ${path.module}/../../../shared/ssh"
+  }
+}
+
+# Write private key to local file for SSH access
+resource "local_file" "ssh_key_pem" {
+  depends_on      = [null_resource.create_ssh_dir]
+  content         = tls_private_key.ssh_key.private_key_pem
+  filename        = "${path.module}/../../../shared/ssh/${var.datacenter}-server-key.pem"
+  file_permission = "0600"
 }
 
 resource "aws_vpc" "main" {

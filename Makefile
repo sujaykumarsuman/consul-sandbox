@@ -47,3 +47,8 @@ mkdir -p shared/bin
 # Build the hello client binary
 rm -f shared/bin/hello-client
 GOOS=linux GOARCH=amd64 go build -o shared/bin/hello-client services/hello-client/main.go
+
+# SSH into the self-hosted Consul server instance.
+.PHONY: ssh-consul-server
+ssh-consul-server:
+	ssh -i $$(terraform -chdir=environments/sh/sh-dc output -raw ssh_private_key_path) ubuntu@$$(terraform -chdir=environments/sh/sh-dc output -raw server_public_ip)
