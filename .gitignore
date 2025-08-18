@@ -8,3 +8,6 @@
 
 # local .env files
 .env
+
+# generated ssh keys
+shared/ssh/
