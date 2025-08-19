@@ -30,17 +30,28 @@ echo "Installing Consul Enterprise license"
 echo "$CONSUL_ENT_LICENSE" | sudo tee /etc/consul.d/license.hclic > /dev/null
 sudo chmod 644 /etc/consul.d/license.hclic
 
-# Create server configuration
-sudo mkdir -p /etc/consul.d /opt/consul/data
-cat <<CFG | sudo tee /etc/consul.d/server.hcl
-server = true
-bootstrap_expect = 1
-datacenter = "${DATACENTER}"
-ui = true
-client_addr = "0.0.0.0"
-bind_addr = "0.0.0.0"
-data_dir = "/opt/consul/data"
-CFG
+# Copy pre-rendered configuration bundle
+CONFIG_DIR="/ops/shared/config/server_config/${DATACENTER}"
+CLIENT_DIR="/ops/shared/config/client_config/${DATACENTER}"
+if [ ! -d "$CONFIG_DIR" ]; then
+  echo "Configuration directory not found: $CONFIG_DIR"
+  exit 1
+fi
+sudo cp "${CONFIG_DIR}/server_config.json" /etc/consul.d/client_config.json
+
+# Generate a CA certificate and distribute it
+echo "Generating CA certificate"
+consul tls ca create >/tmp/ca.log 2>&1
+sudo cp consul-agent-ca.pem /etc/consul.d/ca.pem
+sudo cp consul-agent-ca.pem "${CONFIG_DIR}/ca.pem"
+sudo cp consul-agent-ca.pem "${CLIENT_DIR}/ca.pem"
+rm -f consul-agent-ca.pem consul-agent-ca-key.pem
+
+# Generate initial Consul configuration (without ACL token)
+echo "Generating Consul server configuration"
+sudo bash /ops/shared/scripts/generate_consul_config.sh \
+  /etc/consul.d/client_config.json \
+  /ops/shared/config/templates/server/consul.hcl.tpl
 
 cat <<'SERVICE' | sudo tee /etc/systemd/system/consul.service
 [Unit]
@@ -58,3 +69,6 @@ SERVICE
 
 sudo systemctl enable consul.service && sleep 5
 sudo systemctl start consul.service
+
+# Bootstrap ACLs and distribute token
+sudo /ops/shared/scripts/bootstrap_acl.sh "$DATACENTER"

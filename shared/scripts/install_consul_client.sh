@@ -1,4 +1,4 @@
-#!#!/bin/bash
+#!/bin/bash
 # Install Consul client on an Ubuntu system
 
 set -e
@@ -36,12 +36,21 @@ fi
 sudo mkdir -p /etc/consul.d
 sudo mkdir -p /opt/consul/data
 
-# Copy the client configuration and CA file to /etc/consul.d
-echo "Copying client configuration and CA file to /etc/consul.d"
+# Wait for CA cert and admin token to be available
+until [ -s "${CONFIG_DIR}/client_config/${DATACENTER}/ca.pem" ]; do
+    echo "Waiting for CA certificate..."
+    sleep 2
+done
+
+until [ -s "${CONFIG_DIR}/client_config/${DATACENTER}/admin_token.txt" ]; do
+    echo "Waiting for admin token..."
+    sleep 2
+done
+
+# Copy the client configuration, CA file, and admin token to /etc/consul.d
+echo "Copying client configuration and secrets to /etc/consul.d"
 sudo cp "${CONFIG_FILE}" /etc/consul.d/
 sudo cp "${CONFIG_DIR}/client_config/${DATACENTER}/ca.pem" /etc/consul.d/
-# Copy the admin token to /etc/consul.d
-echo "Copying admin token to /etc/consul.d"
 sudo cp "${CONFIG_DIR}/client_config/${DATACENTER}/admin_token.txt" /etc/consul.d/
 
 # Wait for network
