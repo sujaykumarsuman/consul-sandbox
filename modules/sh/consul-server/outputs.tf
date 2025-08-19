@@ -11,5 +11,5 @@ output "public_ip" {
 }
 
 output "ssh_private_key_path" {
-  value = local_file.ssh_key_pem.filename
+  value = local.ssh_private_key_path
 }

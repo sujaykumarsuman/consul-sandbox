@@ -36,10 +36,14 @@ resource "aws_key_pair" "server" {
   public_key = tls_private_key.ssh_key.public_key_openssh
 }
 
+locals {
+  ssh_private_key_path = abspath("${path.root}/../../../shared/ssh/${var.datacenter}-server-key.pem")
+}
+
 # Create directory for SSH keys
 resource "null_resource" "create_ssh_dir" {
   provisioner "local-exec" {
-    command = "mkdir -p ${path.module}/../../../shared/ssh"
+    command = "mkdir -p ${dirname(local.ssh_private_key_path)}"
   }
 }
 
@@ -47,8 +51,8 @@ resource "null_resource" "create_ssh_dir" {
 resource "local_file" "ssh_key_pem" {
   depends_on      = [null_resource.create_ssh_dir]
   content         = tls_private_key.ssh_key.private_key_pem
-  filename        = "${path.module}/../../../shared/ssh/${var.datacenter}-server-key.pem"
-  file_permission = "0600"
+  filename        = local.ssh_private_key_path
+  file_permission = "0400"
 }
 
 resource "aws_vpc" "main" {
