@@ -101,6 +101,13 @@ resource "aws_security_group" "server" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -140,6 +147,10 @@ resource "aws_instance" "server" {
       "sudo mv /home/ubuntu/shared /ops/shared",
       "sudo chmod -R 755 /ops/shared"
     ]
+  }
+
+  metadata_options {
+    http_tokens = "required"
   }
 
   tags = {
