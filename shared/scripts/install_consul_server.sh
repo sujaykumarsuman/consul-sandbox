@@ -30,9 +30,21 @@ echo "Installing Consul Enterprise license"
 echo "$CONSUL_ENT_LICENSE" | sudo tee /etc/consul.d/license.hclic > /dev/null
 sudo chmod 644 /etc/consul.d/license.hclic
 
-# Generate server configuration
+# Copy pre-rendered configuration bundle
+CONFIG_DIR="/ops/shared/config/server_config/${DATACENTER}"
+if [ ! -d "$CONFIG_DIR" ]; then
+  echo "Configuration directory not found: $CONFIG_DIR"
+  exit 1
+fi
+sudo cp "${CONFIG_DIR}/server_config.json" /etc/consul.d/client_config.json
+sudo cp "${CONFIG_DIR}/ca.pem" /etc/consul.d/ca.pem
+sudo cp "${CONFIG_DIR}/admin_token.txt" /etc/consul.d/admin_token.txt
+
+# Generate final Consul configuration
 echo "Generating Consul server configuration"
-sudo bash /ops/shared/scripts/generate_server_config.sh "${DATACENTER}"
+sudo bash /ops/shared/scripts/generate_consul_config.sh \
+  /etc/consul.d/client_config.json \
+  /ops/shared/config/templates/server/consul.hcl.tpl
 
 cat <<'SERVICE' | sudo tee /etc/systemd/system/consul.service
 [Unit]

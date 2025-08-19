@@ -1,14 +1,19 @@
 #!/bin/bash
 
-CONFIG_JSON="/etc/consul.d/client_config.json"
-TEMPLATE="/ops/shared/config/templates/consul.hcl.tpl"
-OUTPUT="/etc/consul.d/consul.hcl"
+# Optionally override the config JSON, template, and output path
+CONFIG_JSON=${1:-/etc/consul.d/client_config.json}
+TEMPLATE=${2:-/ops/shared/config/templates/client/consul.hcl.tpl}
+OUTPUT=${3:-/etc/consul.d/consul.hcl}
 
 # Extract required values using jq
 DATACENTER=$(jq -r '.datacenter' "$CONFIG_JSON")
 LOG_LEVEL=$(jq -r '.log_level' "$CONFIG_JSON")
 SERVER=$(jq -r '.server' "$CONFIG_JSON")
 UI=$(jq -r '.ui' "$CONFIG_JSON")
+
+CLIENT_ADDR=$(jq -r '.client_addr // "0.0.0.0"' "$CONFIG_JSON")
+BIND_ADDR=$(jq -r '.bind_addr // "0.0.0.0"' "$CONFIG_JSON")
+BOOTSTRAP_EXPECT=$(jq -r '.bootstrap_expect // 1' "$CONFIG_JSON")
 
 ENCRYPT=$(jq -r '.encrypt' "$CONFIG_JSON")
 ENCRYPT_VERIFY_INCOMING=$(jq -r '.encrypt_verify_incoming' "$CONFIG_JSON")
@@ -33,6 +38,7 @@ LICENSE_PATH="/etc/consul.d/license.hclic"
 export DATACENTER LOG_LEVEL SERVER UI ENCRYPT ENCRYPT_VERIFY_INCOMING ENCRYPT_VERIFY_OUTGOING
 export RETRY_JOIN ACL_ENABLED ACL_DOWN_POLICY ACL_DEFAULT_POLICY
 export AUTO_ENCRYPT_TLS TLS_CA_FILE TLS_VERIFY_OUTGOING CONNECT_ENABLED CONSUL_HTTP_TOKEN LICENSE_PATH
+export CLIENT_ADDR BIND_ADDR BOOTSTRAP_EXPECT
 
 # Generate HCL
 envsubst < "$TEMPLATE" > "$OUTPUT"
