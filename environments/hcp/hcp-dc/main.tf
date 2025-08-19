@@ -42,7 +42,7 @@ resource "null_resource" "create_client_config_dir" {
   for_each = module.hcp_consul
 
   provisioner "local-exec" {
-    command = "mkdir -p ${path.module}/../../../shared/config/client_config/${each.value.datacenter}"
+    command = "mkdir -p ${path.module}/../../../shared/config/client_config/${each.value.datacenter} ${path.module}/../../../shared/config/server_config/${each.value.datacenter}"
   }
 }
 
@@ -68,4 +68,37 @@ resource "local_file" "admin_token" {
 
   content  = each.value.hcp_admin_token
   filename = "${path.module}/../../../shared/config/client_config/${each.value.datacenter}/admin_token.txt"
+}
+
+# Server configuration bundle
+resource "local_file" "server_config_json" {
+  depends_on = [module.hcp_consul, null_resource.create_client_config_dir]
+  for_each   = module.hcp_consul
+  content = jsonencode(
+    merge(
+      jsondecode(base64decode(each.value.consul_config_file)),
+      {
+        server           = true,
+        ui               = true,
+        bootstrap_expect = 1,
+        client_addr      = "0.0.0.0",
+        bind_addr        = "0.0.0.0"
+      }
+    )
+  )
+  filename = "${path.module}/../../../shared/config/server_config/${each.value.datacenter}/server_config.json"
+}
+
+resource "local_file" "server_ca_pem" {
+  depends_on = [module.hcp_consul, null_resource.create_client_config_dir]
+  for_each   = module.hcp_consul
+  content    = base64decode(each.value.consul_ca_file)
+  filename   = "${path.module}/../../../shared/config/server_config/${each.value.datacenter}/ca.pem"
+}
+
+resource "local_file" "server_admin_token" {
+  depends_on = [module.hcp_consul, null_resource.create_client_config_dir]
+  for_each   = module.hcp_consul
+  content    = each.value.hcp_admin_token
+  filename   = "${path.module}/../../../shared/config/server_config/${each.value.datacenter}/admin_token.txt"
 }

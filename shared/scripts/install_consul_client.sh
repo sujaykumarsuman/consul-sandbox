@@ -1,4 +1,4 @@
-#!#!/bin/bash
+#!/bin/bash
 # Install Consul client on an Ubuntu system
 
 set -e
