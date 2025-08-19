@@ -2,6 +2,7 @@ datacenter = "${DATACENTER}"
 log_level  = "${LOG_LEVEL}"
 server     = ${SERVER}
 data_dir   = "/opt/consul/data"
+license_path = "${LICENSE_PATH}"
 
 encrypt = "${ENCRYPT}"
 encrypt_verify_incoming = ${ENCRYPT_VERIFY_INCOMING}

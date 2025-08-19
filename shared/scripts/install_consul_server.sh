@@ -30,17 +30,9 @@ echo "Installing Consul Enterprise license"
 echo "$CONSUL_ENT_LICENSE" | sudo tee /etc/consul.d/license.hclic > /dev/null
 sudo chmod 644 /etc/consul.d/license.hclic
 
-# Create server configuration
-sudo mkdir -p /etc/consul.d /opt/consul/data
-cat <<CFG | sudo tee /etc/consul.d/server.hcl
-server = true
-bootstrap_expect = 1
-datacenter = "${DATACENTER}"
-ui = true
-client_addr = "0.0.0.0"
-bind_addr = "0.0.0.0"
-data_dir = "/opt/consul/data"
-CFG
+# Generate server configuration
+echo "Generating Consul server configuration"
+sudo bash /ops/shared/scripts/generate_server_config.sh "${DATACENTER}"
 
 cat <<'SERVICE' | sudo tee /etc/systemd/system/consul.service
 [Unit]

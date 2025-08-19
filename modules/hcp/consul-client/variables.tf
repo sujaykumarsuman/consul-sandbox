@@ -43,19 +43,19 @@ variable "consul_ent_license" {
 variable "payload_binary" {
   description = "payload binary name (e.g. hello-server or hello-client)"
   type        = string
-  default     = "hello-server"  # Default to hello-server binary
+  default     = "hello-server" # Default to hello-server binary
 }
 
 variable "payload_id" {
   description = "ID for the payload instance running the Consul client"
   type        = string
-  default = "hello_server_01"
+  default     = "hello_server_01"
 }
 
 variable "payload_port" {
   description = "Port for the service payload (e.g. hello-server or hello-client)"
   type        = number
-  default     = 0  # 0 means 'not set'
+  default     = 0 # 0 means 'not set'
 }
 
 variable "datacenter" {
