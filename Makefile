@@ -51,4 +51,4 @@ build-hello-client:
 # SSH into the self-hosted Consul server instance.
 .PHONY: ssh-consul-server
 ssh-consul-server:
-	ssh -i $$(terraform -chdir=environments/sh/sh-dc output -raw ssh_private_key_path) ubuntu@$$(terraform -chdir=environments/sh/sh-dc output -raw server_public_ip)
+	ssh -i shared/ssh/sh-dc-server-key.pem ubuntu@$$(terraform -chdir=environments/sh/sh-dc output -raw server_public_ip)
