@@ -49,11 +49,5 @@ build-hello-client:
 
 # SSH Targets
 .PHONY: ssh-hcp/hello-server
-	ssh-hcp/hello-server:
+ssh-hcp/hello-server:
 	ssh -o StrictHostKeyChecking=no -i environments/hcp/hello-server/client-key.pem ubuntu@$(shell terraform -chdir=environments/hcp/hello-server output -raw instance_public_ip)
-
-.PHONY: ssh-consul-server
-ssh-consul-server:
-	key=$$(terraform -chdir=environments/sh/sh-dc output -raw ssh_private_key_path); \
-	chmod 400 $$key; \
-	ssh -o StrictHostKeyChecking=no -i $$key ubuntu@$$(terraform -chdir=environments/sh/sh-dc output -raw server_public_ip)
